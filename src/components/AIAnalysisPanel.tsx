@@ -1,8 +1,6 @@
 import React from 'react';
 import {
-    Sparkles, BrainCircuit, Loader2,
-    AlertTriangle, CheckCircle2, ChevronRight,
-    Search, Database, Info, Archive
+    Sparkles, BrainCircuit, Search, Archive, RotateCcw, Zap
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -128,6 +126,3 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
         </div>
     );
 };
-
-// Missing imports to be safe
-import { RotateCcw, Zap } from 'lucide-react';

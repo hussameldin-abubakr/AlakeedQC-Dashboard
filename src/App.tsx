@@ -14,7 +14,7 @@ import { type AISettings, DEFAULT_SETTINGS } from './types/settings';
 import { type PromptState, INITIAL_PROMPT_STATE, type PromptVersion } from './types/prompt';
 import { supabaseService } from './services/supabaseService';
 import { supabase } from './lib/supabase';
-import { Activity, Keyboard, Code, Database, Zap, Archive, Loader2 } from 'lucide-react';
+import { Activity, Keyboard, Database, Zap, Archive } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 
 function App() {
