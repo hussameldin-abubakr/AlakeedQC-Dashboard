@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     X, Save, RotateCcw, History,
     Trash2, Code, Info, Clock
@@ -25,6 +25,13 @@ export const PromptStudio: React.FC<PromptStudioProps> = ({
     const [editDesc, setEditDesc] = useState('');
     const [view, setView] = useState<'editor' | 'history'>('editor');
     const [showSaveModal, setShowSaveModal] = useState(false);
+
+    // Sync editor with active version when modal opens or active version changes
+    useEffect(() => {
+        if (isOpen) {
+            setEditContent(activeVersion.content);
+        }
+    }, [isOpen, state.activeVersionId]);
 
     if (!isOpen) return null;
 
@@ -143,9 +150,31 @@ export const PromptStudio: React.FC<PromptStudioProps> = ({
                             {/* Editor Area */}
                             <div className="flex-1 flex flex-col p-8 bg-slate-50/20">
                                 <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-inner flex flex-col overflow-hidden">
-                                    <div className="bg-slate-50 px-6 py-2 border-b border-slate-100 flex items-center justify-between">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Markdown Template</span>
-                                        <span className="text-[10px] font-bold text-slate-300">Chars: {editContent.length}</span>
+                                    <div className="bg-slate-50 px-6 py-3 border-b border-slate-100 flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Markdown Template</span>
+                                            <div className="h-3 w-px bg-slate-200" />
+                                            <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded">
+                                                Base: {activeVersion.name}
+                                            </span>
+                                            {editContent !== activeVersion.content && (
+                                                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest bg-amber-50 px-2 py-0.5 rounded animate-pulse">
+                                                    Modified
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            {editContent !== activeVersion.content && (
+                                                <button
+                                                    onClick={() => setEditContent(activeVersion.content)}
+                                                    className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors"
+                                                >
+                                                    <RotateCcw className="w-3 h-3" />
+                                                    Discard Changes
+                                                </button>
+                                            )}
+                                            <span className="text-[10px] font-bold text-slate-300">Chars: {editContent.length}</span>
+                                        </div>
                                     </div>
                                     <textarea
                                         value={editContent}
@@ -208,10 +237,13 @@ export const PromptStudio: React.FC<PromptStudioProps> = ({
                                             {v.id !== state.activeVersionId && (
                                                 <>
                                                     <button
-                                                        onClick={() => onActivate(v.id)}
+                                                        onClick={() => {
+                                                            onActivate(v.id);
+                                                            handleRestore(v);
+                                                        }}
                                                         className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all hover:bg-slate-800"
                                                     >
-                                                        Activate
+                                                        Activate & Edit
                                                     </button>
                                                     <button
                                                         onClick={() => onDelete(v.id)}
