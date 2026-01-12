@@ -161,7 +161,17 @@ const ParameterRow = ({ param }: { param: Parameter }) => {
                 </div>
             </td>
             <td className="px-8 py-5">
-                <span className="text-slate-300 italic text-sm">No prior data</span>
+                {param.HistoryValue ? (
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <span className="text-slate-500 font-mono font-bold text-sm">{param.HistoryValue}</span>
+                            <span className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">Prior</span>
+                        </div>
+                        <span className="text-[10px] text-slate-300 font-bold uppercase tracking-tighter mt-1">{param.HistoryDate}</span>
+                    </div>
+                ) : (
+                    <span className="text-slate-300 italic text-sm">No prior data</span>
+                )}
             </td>
         </tr>
     );
@@ -169,14 +179,28 @@ const ParameterRow = ({ param }: { param: Parameter }) => {
 
 function checkAbnormal(value: string, range: string): boolean {
     if (!value || !range) return false;
-    const parts = range.split('-');
-    if (parts.length !== 2) return false;
-
     const val = parseFloat(value);
-    const min = parseFloat(parts[0]);
-    const max = parseFloat(parts[1]);
+    if (isNaN(val)) return false;
 
-    if (isNaN(val) || isNaN(min) || isNaN(max)) return false;
+    // Handle "min-max"
+    if (range.includes('-')) {
+        const parts = range.split('-').map(p => parseFloat(p.trim()));
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            return val < parts[0] || val > parts[1];
+        }
+    }
 
-    return val < min || val > max;
+    // Handle "< X"
+    if (range.startsWith('<')) {
+        const threshold = parseFloat(range.replace('<', '').trim());
+        if (!isNaN(threshold)) return val >= threshold; // It is equal or greater, so it's abnormal if the range is "< X"
+    }
+
+    // Handle "> X"
+    if (range.startsWith('>')) {
+        const threshold = parseFloat(range.replace('>', '').trim());
+        if (!isNaN(threshold)) return val <= threshold;
+    }
+
+    return false;
 }

@@ -7,8 +7,8 @@ export async function analyzeReportWithAI(report: Report, settings: AISettings, 
   const prompt = compilePrompt(promptTemplate, report);
 
   // Prioritize .env keys as requested by the user, fallback to DB settings
-  const activeGeminiKey = import.meta.env.VITE_GEMINI_API_KEY || settings.geminiKey;
-  const activeCerebrasKey = import.meta.env.VITE_CEREBRAS_API_KEY || settings.cerebrasKey;
+  const activeGeminiKey = (import.meta.env.VITE_GEMINI_API_KEY || settings.geminiKey || '').trim();
+  const activeCerebrasKey = (import.meta.env.VITE_CEREBRAS_API_KEY || settings.cerebrasKey || '').trim();
 
   if (settings.provider === 'google') {
     if (!activeGeminiKey) {
@@ -50,15 +50,23 @@ export async function analyzeReportWithAI(report: Report, settings: AISettings, 
       });
 
       if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData?.error?.message || "Cerebras API error");
+        const status = response.status;
+        let errorMessage = "Cerebras API error";
+        try {
+          const errData = await response.json();
+          console.error("Cerebras API details:", errData);
+          errorMessage = errData?.error?.message || errData?.message || `Cerebras Error (${status})`;
+        } catch (e) {
+          errorMessage = `Cerebras Error (${status}): ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       return data.choices[0].message.content;
     } catch (error: any) {
-      console.error("Cerebras Error:", error);
-      throw new Error(`Cerebras Error: ${error?.message || "Unknown error"}`);
+      console.error("Cerebras Error Stack:", error);
+      throw new Error(`Cerebras Error: ${error?.message || "Unknown connection error"}`);
     }
   }
 

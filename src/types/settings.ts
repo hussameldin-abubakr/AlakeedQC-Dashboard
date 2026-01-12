@@ -22,8 +22,8 @@ export const AVAILABLE_MODELS: Record<AIProvider, string[]> = {
         'gemini-1.5-pro'
     ],
     cerebras: [
+        'zai-glm-4.7',
         'gpt-oss-120b',
-        'llama3.1-70b',
-        'llama3.1-8b'
+        'qwen-3-32b'
     ]
 };

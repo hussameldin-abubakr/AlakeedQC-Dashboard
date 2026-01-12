@@ -38,7 +38,7 @@ export function getLabIdRange(startId: string, endId: string): string[] {
         if (current === endId) break;
         current = getNextLabId(current);
         // Safety break to prevent infinite loops if logic fails
-        if (range.length > 500) break;
+        if (range.length > 2000) break;
     }
 
     return range;

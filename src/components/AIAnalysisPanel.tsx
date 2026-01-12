@@ -1,9 +1,10 @@
 import React from 'react';
 import {
-    Sparkles, BrainCircuit, Search, Archive, RotateCcw, Zap
+    Sparkles, BrainCircuit, Search, Archive, RotateCcw, Zap, Copy, Check
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import clsx from 'clsx';
 
 interface AIAnalysisPanelProps {
     analysis: string | null;
@@ -11,11 +12,20 @@ interface AIAnalysisPanelProps {
     onAnalyze: () => void;
     activeModel?: string;
     isFromCache?: boolean;
+    onTune?: () => void;
 }
 
 export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
-    analysis, loading, onAnalyze, activeModel, isFromCache
+    analysis, loading, onAnalyze, activeModel, isFromCache, onTune
 }) => {
+    const [copied, setCopied] = React.useState(false);
+
+    const handleCopy = () => {
+        if (!analysis) return;
+        navigator.clipboard.writeText(analysis);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
     return (
         <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-purple-100/50 border border-purple-100 overflow-hidden flex flex-col h-full ring-1 ring-purple-50 group">
             <div className="bg-gradient-to-br from-purple-700 via-purple-600 to-indigo-700 px-8 py-7 flex items-center justify-between text-white relative">
@@ -78,13 +88,34 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Audit Log</p>
                                     <p className="text-xs font-bold text-slate-700">Verified by {activeModel || "AI Engine"}</p>
                                 </div>
-                                <button
-                                    onClick={onAnalyze}
-                                    className="p-3 bg-white shadow-sm border border-slate-200 rounded-xl text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all hover:shadow-md active:scale-95"
-                                    title="Re-run analysis"
-                                >
-                                    <RotateCcw className="w-5 h-5" />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handleCopy}
+                                        className={clsx(
+                                            "p-3 bg-white shadow-sm border rounded-xl transition-all flex items-center gap-2 group/copy",
+                                            copied ? "text-emerald-600 border-emerald-100 bg-emerald-50" : "text-slate-400 border-slate-200 hover:text-blue-600 hover:border-blue-100"
+                                        )}
+                                        title="Copy to clipboard"
+                                    >
+                                        {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                                        {copied && <span className="text-[10px] font-black uppercase tracking-widest">Copied</span>}
+                                    </button>
+                                    <button
+                                        onClick={onAnalyze}
+                                        className="p-3 bg-white shadow-sm border border-slate-200 rounded-xl text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all hover:shadow-md active:scale-95"
+                                        title="Re-run analysis"
+                                    >
+                                        <RotateCcw className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={onTune}
+                                        className="p-3 bg-gradient-to-r from-indigo-600 to-blue-600 shadow-lg shadow-indigo-100 border border-indigo-500 rounded-xl text-white hover:from-indigo-700 hover:to-blue-700 transition-all active:scale-95 flex items-center gap-2 group/tune"
+                                        title="Optimize clinical logic for this report"
+                                    >
+                                        <Sparkles className="w-5 h-5 group-hover/tune:animate-pulse" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Tune Logic</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

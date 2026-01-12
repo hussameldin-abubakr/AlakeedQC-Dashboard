@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Lock, Mail, Loader2, ShieldCheck, Activity } from 'lucide-react';
+import { Footer } from './Footer';
 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -104,6 +105,9 @@ export const Login: React.FC = () => {
                         Unauthorized access is strictly prohibited and monitored
                     </p>
                 </div>
+            </div>
+            <div className="fixed bottom-0 left-0 w-full">
+                <Footer />
             </div>
         </div>
     );

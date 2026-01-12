@@ -4,24 +4,26 @@ import { ReportViewer } from './components/ReportViewer';
 import { AIAnalysisPanel } from './components/AIAnalysisPanel';
 import { SettingsModal } from './components/SettingsModal';
 import { PromptStudio } from './components/PromptStudio';
+import { PromptOptimizer } from './components/PromptOptimizer';
 import { BulkProcessor } from './components/BulkProcessor';
 import { QCDashboard } from './components/QCDashboard';
 import { Login } from './components/Login';
 import { fetchReport, type Report } from './services/api';
 import { analyzeReportWithAI } from './services/aiService';
 import { getNextLabId, getPrevLabId } from './utils/labIdUtils';
-import { type AISettings, DEFAULT_SETTINGS } from './types/settings';
+import { type AISettings, DEFAULT_SETTINGS, AVAILABLE_MODELS } from './types/settings';
 import { type PromptState, INITIAL_PROMPT_STATE, type PromptVersion } from './types/prompt';
 import { supabaseService } from './services/supabaseService';
-import { supabase } from './lib/supabase';
-import { Activity, Keyboard, Database, Zap, Archive } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
+import { Activity, Keyboard, Database, Zap, Archive, AlertTriangle } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
+import { Footer } from './components/Footer';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  const [currentView, setCurrentView] = useState<'auditor' | 'dashboard'>('auditor');
+  const [currentView, setCurrentView] = useState<'auditor' | 'dashboard' | 'optimizer'>('auditor');
   const [labId, setLabId] = useState('2510014363');
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,13 +62,22 @@ function App() {
     const syncSettings = async () => {
       try {
         const cloudSettings = await supabaseService.getSettings();
+        const validateSettings = (s: AISettings): AISettings => {
+          const provider = s.provider || 'google';
+          const models = AVAILABLE_MODELS[provider];
+          if (!models.includes(s.model)) {
+            return { ...s, provider, model: models[0] };
+          }
+          return { ...s, provider };
+        };
+
         if (cloudSettings) {
-          setAiSettings(cloudSettings.ai_settings);
+          setAiSettings(validateSettings(cloudSettings.ai_settings));
           setPromptState(cloudSettings.prompt_state);
         } else {
           const savedAi = localStorage.getItem('alakeed_ai_settings');
           const savedPrompt = localStorage.getItem('alakeed_prompt_state');
-          if (savedAi) setAiSettings(JSON.parse(savedAi));
+          if (savedAi) setAiSettings(validateSettings(JSON.parse(savedAi)));
           if (savedPrompt) setPromptState(JSON.parse(savedPrompt));
         }
       } catch (e) {
@@ -243,11 +254,12 @@ function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
           <Activity className="w-12 h-12 text-blue-600 animate-pulse" />
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Verifying Security Session</p>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -305,8 +317,25 @@ function App() {
             setCurrentView('auditor');
             handleSearch(id);
           }} />
+        ) : currentView === 'optimizer' ? (
+          <PromptOptimizer
+            report={report}
+            settings={aiSettings}
+            promptState={promptState}
+            onSave={handleSavePrompt}
+            onActivate={handleActivatePrompt}
+          />
         ) : (
           <>
+            {!isSupabaseConfigured && (
+              <div className="bg-amber-50 text-amber-700 p-4 rounded-2xl mb-6 border border-amber-200 flex items-center gap-3 shadow-sm">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <div className="text-xs font-bold uppercase tracking-widest">
+                  Cloud Sync Disabled: Missing Supabase credentials in .env. Persistence is limited to local session.
+                </div>
+              </div>
+            )}
+
             <div className="mb-8 flex items-center justify-end gap-3 px-2 overflow-x-auto no-scrollbar pb-2">
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${isFromCache ? 'bg-indigo-50 text-indigo-600 border-indigo-100 shadow-sm' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
                 {isFromCache ? <Archive className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5 text-amber-500" />}
@@ -367,6 +396,7 @@ function App() {
                     analysis={aiAnalysis}
                     loading={aiLoading}
                     onAnalyze={handleAnalyze}
+                    onTune={() => setCurrentView('optimizer')}
                     activeModel={aiSettings.model}
                     isFromCache={isFromCache}
                   />
@@ -376,6 +406,7 @@ function App() {
           </>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

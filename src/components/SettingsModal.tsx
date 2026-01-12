@@ -58,39 +58,53 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                     <div className="space-y-4">
                         <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Select Provider</h3>
                         <div className="grid grid-cols-2 gap-4">
-                            {providers.map((p) => (
-                                <button
-                                    key={p.id}
-                                    onClick={() => handleProviderChange(p.id)}
-                                    className={clsx(
-                                        "flex items-center gap-4 p-5 rounded-2xl border-2 transition-all text-left",
-                                        localSettings.provider === p.id
-                                            ? `border-${p.color}-500 bg-${p.color}-50/50`
-                                            : "border-slate-100 bg-slate-50 hover:border-slate-200"
-                                    )}
-                                >
-                                    <div className={clsx(
-                                        "p-3 rounded-xl transition-all",
-                                        localSettings.provider === p.id
-                                            ? `bg-${p.color}-500 text-white shadow-lg`
-                                            : "bg-white text-slate-400 shadow-sm"
-                                    )}>
-                                        {p.icon}
-                                    </div>
-                                    <div className="flex-1">
+                            {providers.map((p) => {
+                                const isSelected = localSettings.provider === p.id;
+                                const colorStyles = {
+                                    blue: {
+                                        border: isSelected ? 'border-blue-500 bg-blue-50/50' : 'border-slate-100 bg-slate-50 hover:border-slate-200',
+                                        icon: isSelected ? 'bg-blue-500 text-white shadow-lg' : 'bg-white text-slate-400 shadow-sm',
+                                        text: isSelected ? 'text-blue-900' : 'text-slate-600',
+                                        check: 'text-blue-500'
+                                    },
+                                    purple: {
+                                        border: isSelected ? 'border-purple-500 bg-purple-50/50' : 'border-slate-100 bg-slate-50 hover:border-slate-200',
+                                        icon: isSelected ? 'bg-purple-500 text-white shadow-lg' : 'bg-white text-slate-400 shadow-sm',
+                                        text: isSelected ? 'text-purple-900' : 'text-slate-600',
+                                        check: 'text-purple-500'
+                                    }
+                                }[p.color as 'blue' | 'purple'];
+
+                                return (
+                                    <button
+                                        key={p.id}
+                                        onClick={() => handleProviderChange(p.id)}
+                                        className={clsx(
+                                            "flex items-center gap-4 p-5 rounded-2xl border-2 transition-all text-left",
+                                            colorStyles.border
+                                        )}
+                                    >
                                         <div className={clsx(
-                                            "font-bold text-lg",
-                                            localSettings.provider === p.id ? `text-${p.color}-900` : "text-slate-600"
+                                            "p-3 rounded-xl transition-all",
+                                            colorStyles.icon
                                         )}>
-                                            {p.name}
+                                            {p.icon}
                                         </div>
-                                        <div className="text-xs text-slate-400 capitalize whitespace-nowrap overflow-hidden text-ellipsis ring-0 ring-offset-0 ring-transparent focus:ring-0">Infrastructure</div>
-                                    </div>
-                                    {localSettings.provider === p.id && (
-                                        <CheckCircle2 className={clsx("w-6 h-6 shrink-0", `text-${p.color}-500`)} />
-                                    )}
-                                </button>
-                            ))}
+                                        <div className="flex-1">
+                                            <div className={clsx(
+                                                "font-bold text-lg",
+                                                colorStyles.text
+                                            )}>
+                                                {p.name}
+                                            </div>
+                                            <div className="text-xs text-slate-400 capitalize whitespace-nowrap overflow-hidden text-ellipsis ring-0 ring-offset-0 ring-transparent focus:ring-0">Infrastructure</div>
+                                        </div>
+                                        {isSelected && (
+                                            <CheckCircle2 className={clsx("w-6 h-6 shrink-0", colorStyles.check)} />
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 

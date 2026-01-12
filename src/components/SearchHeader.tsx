@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Search, Loader2, Settings2, Code,
-    LogOut, User, Zap, LayoutDashboard, BrainCircuit
+    LogOut, User, Zap, LayoutDashboard, BrainCircuit, Sparkles
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -13,8 +13,8 @@ interface SearchHeaderProps {
     onOpenPrompt: () => void;
     onOpenBulk: () => void;
     onSignOut: () => void;
-    currentView: 'auditor' | 'dashboard';
-    onViewChange: (view: 'auditor' | 'dashboard') => void;
+    currentView: 'auditor' | 'dashboard' | 'optimizer';
+    onViewChange: (view: 'auditor' | 'dashboard' | 'optimizer') => void;
     userEmail?: string | null;
     loading: boolean;
 }
@@ -42,7 +42,7 @@ export const SearchHeader: React.FC<SearchHeaderProps> = ({
                         <h1 className="text-xl font-black hidden lg:block text-slate-800 tracking-tight">Alakeed QC</h1>
                     </div>
 
-                    <nav className="hidden md:flex items-center bg-slate-50 p-1 rounded-xl border border-slate-100">
+                    <nav className="flex items-center bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
                         <button
                             onClick={() => onViewChange('auditor')}
                             className={clsx(
@@ -62,6 +62,16 @@ export const SearchHeader: React.FC<SearchHeaderProps> = ({
                         >
                             <LayoutDashboard className="w-4 h-4" />
                             Analytics
+                        </button>
+                        <button
+                            onClick={() => onViewChange('optimizer')}
+                            className={clsx(
+                                "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all",
+                                currentView === 'optimizer' ? "bg-white text-blue-600 shadow-sm border border-slate-200" : "text-slate-400 hover:text-slate-600"
+                            )}
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            Optimizer
                         </button>
                     </nav>
                 </div>

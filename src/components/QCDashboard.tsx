@@ -75,7 +75,6 @@ export const QCDashboard: React.FC<QCDashboardProps> = ({ onSelectReport }) => {
 
     // Global Stats (Lab Overview) vs Daily Stats
     const stats = useMemo(() => {
-        // Use the deduplicated latest entries for stats too
         const latestMap: Record<string, SavedAIReport> = {};
         reports.forEach(r => {
             const existing = latestMap[r.lab_id];
@@ -90,10 +89,29 @@ export const QCDashboard: React.FC<QCDashboardProps> = ({ onSelectReport }) => {
         const passGlobal = totalGlobal - attentionGlobal;
         const globalQualityScore = totalGlobal > 0 ? Math.round((passGlobal / totalGlobal) * 100) : 0;
 
-        // Daily Context (from deduplicated set)
         const daySet = latestReports.filter(r => r.created_at?.startsWith(selectedDate));
         const dayTotal = daySet.length;
         const dayAttention = daySet.filter(r => getReportStatus(r.analysis) === 'attention').length;
+
+        const handleExport = () => {
+            if (filteredReports.length === 0) return;
+            const headers = ['Lab ID', 'Date', 'Status', 'Analysis Insight'];
+            const rows = filteredReports.map(r => [
+                r.lab_id,
+                new Date(r.created_at || '').toLocaleDateString(),
+                getReportStatus(r.analysis),
+                `"${r.analysis.replace(/"/g, '""').slice(0, 500)}..."`
+            ]);
+            const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Alakeed_QC_Audit_${selectedDate}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
 
         return {
             totalGlobal,
@@ -101,9 +119,10 @@ export const QCDashboard: React.FC<QCDashboardProps> = ({ onSelectReport }) => {
             attentionGlobal,
             globalQualityScore,
             dayTotal,
-            dayAttention
+            dayAttention,
+            handleExport
         };
-    }, [reports, selectedDate]);
+    }, [reports, selectedDate, filteredReports]);
 
     if (loading) {
         return (
@@ -138,7 +157,10 @@ export const QCDashboard: React.FC<QCDashboardProps> = ({ onSelectReport }) => {
                         className="bg-transparent border-none px-2 py-2 font-bold text-slate-700 outline-none"
                     />
                     <div className="w-[1px] h-6 bg-slate-100 mx-1" />
-                    <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all">
+                    <button
+                        onClick={stats.handleExport}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all"
+                    >
                         <Download className="w-4 h-4 ml-1" />
                         Export Audit
                     </button>
